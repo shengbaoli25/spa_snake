@@ -1,0 +1,66 @@
+root = ../..
+vendor = $root/vendor/light
+cc = arm-none-eabi-gcc
+size = arm-none-eabi-size
+objcopy = arm-none-eabi-objcopy
+
+cpu = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+defines = -DSTM32F407xx -DUSE_HAL_DRIVER -DUSE_USB_FS -DHSE_VALUE=12000000U
+includes = -ICore/Inc -IUSB/Inc -I$vendor/hal/Inc -I$vendor/cmsis_device/Include -I$vendor/cube/Drivers/CMSIS/Include -I$vendor/usb/Core/Inc -I$vendor/usb/Class/CDC/Inc
+cflags = $cpu $defines $includes -std=gnu11 -O2 -g3 -ffunction-sections -fdata-sections -Wall -Wextra
+ldflags = $cpu -TSTM32F407IGHX_FLASH.ld --specs=nano.specs --specs=nosys.specs -Wl,--gc-sections,-Map=build/motor_usb_cdc.map -Wl,--cref
+
+rule cc
+  command = "$cc" $cflags -MMD -MF $out.d -c $in -o $out
+  depfile = $out.d
+  deps = gcc
+  description = CC $in
+
+rule as
+  command = "$cc" $cpu $defines -x assembler-with-cpp -c $in -o $out
+  description = AS $in
+
+rule link
+  command = "$cc" $in $ldflags -Wl,--start-group -lc -lm -Wl,--end-group -o $out
+  description = LINK $out
+
+rule hex
+  command = "$objcopy" -O ihex $in $out
+  description = HEX $out
+
+rule bin
+  command = "$objcopy" -O binary -S $in $out
+  description = BIN $out
+
+build build/main.o: cc Core/Src/main.c
+build build/control.o: cc Core/Src/motor_control.c
+build build/system.o: cc Core/Src/system_stm32f4xx.c
+build build/startup.o: as Core/Startup.s
+build build/usbd_conf.o: cc USB/Src/usbd_conf.c
+build build/usbd_desc.o: cc USB/Src/usbd_desc.c
+build build/usbd_cdc_if.o: cc USB/Src/usbd_cdc_if.c
+
+build build/hal.o: cc $vendor/hal/Src/stm32f4xx_hal.c
+build build/hal_cortex.o: cc $vendor/hal/Src/stm32f4xx_hal_cortex.c
+build build/hal_dma.o: cc $vendor/hal/Src/stm32f4xx_hal_dma.c
+build build/hal_flash.o: cc $vendor/hal/Src/stm32f4xx_hal_flash.c
+build build/hal_flash_ex.o: cc $vendor/hal/Src/stm32f4xx_hal_flash_ex.c
+build build/hal_gpio.o: cc $vendor/hal/Src/stm32f4xx_hal_gpio.c
+build build/hal_pcd.o: cc $vendor/hal/Src/stm32f4xx_hal_pcd.c
+build build/hal_pcd_ex.o: cc $vendor/hal/Src/stm32f4xx_hal_pcd_ex.c
+build build/hal_pwr.o: cc $vendor/hal/Src/stm32f4xx_hal_pwr.c
+build build/hal_pwr_ex.o: cc $vendor/hal/Src/stm32f4xx_hal_pwr_ex.c
+build build/hal_rcc.o: cc $vendor/hal/Src/stm32f4xx_hal_rcc.c
+build build/hal_rcc_ex.o: cc $vendor/hal/Src/stm32f4xx_hal_rcc_ex.c
+build build/ll_usb.o: cc $vendor/hal/Src/stm32f4xx_ll_usb.c
+
+build build/usbd_core.o: cc $vendor/usb/Core/Src/usbd_core.c
+build build/usbd_ctlreq.o: cc $vendor/usb/Core/Src/usbd_ctlreq.c
+build build/usbd_ioreq.o: cc $vendor/usb/Core/Src/usbd_ioreq.c
+build build/usbd_cdc.o: cc $vendor/usb/Class/CDC/Src/usbd_cdc.c
+
+build build/motor_usb_cdc.elf: link build/main.o build/control.o build/system.o build/startup.o build/usbd_conf.o build/usbd_desc.o build/usbd_cdc_if.o build/hal.o build/hal_cortex.o build/hal_dma.o build/hal_flash.o build/hal_flash_ex.o build/hal_gpio.o build/hal_pcd.o build/hal_pcd_ex.o build/hal_pwr.o build/hal_pwr_ex.o build/hal_rcc.o build/hal_rcc_ex.o build/ll_usb.o build/usbd_core.o build/usbd_ctlreq.o build/usbd_ioreq.o build/usbd_cdc.o | STM32F407IGHX_FLASH.ld
+build build/motor_usb_cdc.hex: hex build/motor_usb_cdc.elf
+build build/motor_usb_cdc.bin: bin build/motor_usb_cdc.elf
+
+default build/motor_usb_cdc.hex build/motor_usb_cdc.bin

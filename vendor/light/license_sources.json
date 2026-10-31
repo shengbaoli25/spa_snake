@@ -1,0 +1,26 @@
+[
+  {
+    "component": "ST HAL v1.8.5",
+    "source_url": "https://raw.githubusercontent.com/STMicroelectronics/stm32f4xx-hal-driver/v1.8.5/LICENSE.md",
+    "license_path": "vendor/light/hal/LICENSE.md",
+    "sha256": "376c82bcef0be563bf59b93d05cfdd4b6295e4660b55b31dd8a883bf1d6637f7"
+  },
+  {
+    "component": "ST CMSIS Device v2.6.11",
+    "source_url": "https://raw.githubusercontent.com/STMicroelectronics/cmsis-device-f4/v2.6.11/LICENSE.md",
+    "license_path": "vendor/light/cmsis_device/LICENSE.md",
+    "sha256": "dadb755f51d36614173b28c5790cb4a991e8f4cc822e5b634fd66a4f4145824d"
+  },
+  {
+    "component": "ST USB Device v2.11.4",
+    "source_url": "https://raw.githubusercontent.com/STMicroelectronics/stm32-mw-usb-device/v2.11.4/LICENSE.md",
+    "license_path": "vendor/light/usb/LICENSE.md",
+    "sha256": "6b6a3968253466c776a660e916c67c7207c42fcd5bf02895e50215f923dae29d"
+  },
+  {
+    "component": "Arm CMSIS Core 5.9.0",
+    "source_url": "https://raw.githubusercontent.com/ARM-software/CMSIS_5/5.9.0/LICENSE.txt",
+    "license_path": "vendor/light/cube/Drivers/CMSIS/LICENSE.txt",
+    "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+  }
+]

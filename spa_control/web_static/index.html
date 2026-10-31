@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>双电机控制</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand"><span class="brand-mark">S<span>·</span></span><div><strong>SPA 工作台</strong><small>螺旋机器人实验</small></div></div>
+      <div class="rail-section">WORKSPACE</div>
+      <a class="rail-link selected" href="#algorithm">设置与运行</a><a class="rail-link" href="#motors">单机测试</a><a class="rail-link" href="#optional-tools">相机与工具</a><div class="rail-bottom"><span class="rail-dot"></span> 本地运行 <small>LOCAL WORKBENCH</small></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="breadcrumb">双电机控制</div><div class="topbar-actions"><span class="local-chip"><i></i> 本地服务</span><button id="all-stop" class="button danger">■ 停止全部</button></div></header>
+      <div class="content">
+        <div class="heading"><div><h1>双电机控制</h1></div></div><ol class="quick-guide"><li><a href="#algorithm">填写速度和距离</a>，确认前后与方向后保存设置。</li><li>点击 <strong>双机试运行</strong>，到距离或时间后停止。</li></ol><div id="service-error" class="notice error hidden" role="alert"></div>
+        <p id="stop-status" class="status-detail stop-status" aria-live="polite"></p>
+        <section id="algorithm" aria-labelledby="algorithm-title">
+          <div class="section-heading second"><div><span class="section-index">05 / SERIAL PREVIEW AUGMENTATION</span><h2 id="algorithm-title">设置与运行</h2></div><span id="experiment-badge" class="badge"><i></i> 等待设置</span></div>
+          <div class="panel experiment-panel">
+            
+            <p class="description">固定参数：<strong>30 mm/转 · 1:1</strong>。100 rpm = 0.05 m/s。</p>
+            <div class="experiment-form">
+              <div><label for="front-motor">前节电机</label><select id="front-motor"><option value="">请选择前节电机</option><option value="3">M3 在前，M4 在后</option><option value="4">M4 在前，M3 在后</option></select></div>
+              <div><label for="experiment-direction-m3">M3 方向</label><select id="experiment-direction-m3"><option value="-1">−（负转速）</option><option value="1">+（正转速）</option></select></div>
+              <div><label for="experiment-direction-m4">M4 方向</label><select id="experiment-direction-m4"><option value="-1">−（负转速）</option><option value="1">+（正转速）</option></select></div>
+              <div><label for="experiment-forward-sign">相机前进方向</label><select id="experiment-forward-sign"><option value="1">轨道正方向 (+)</option><option value="-1">轨道负方向 (−)</option></select></div>
+              <div><label for="experiment-rpm">转速 <span>rpm</span></label><input id="experiment-rpm" type="number" min="1" max="500" step="1" value="60"></div>
+              <div><label for="experiment-speed">目标速度 <span>m/s · 自动换算</span></label><input id="experiment-speed" type="number" min="0.0005" max="0.25" step="0.0005" value="0.03"></div>
+              <div><label for="experiment-distance">目标距离 <span>m · 到达后停止</span></label><input id="experiment-distance" type="number" min="0.01" max="10" step="0.01" value="0.3"></div>
+              <div><label for="experiment-duration">最长时长 <span>秒 · 到时停止</span></label><input id="experiment-duration" type="number" min="2" max="30" step="1" value="10"></div>
+              
+            </div>
+            <p id="experiment-config-summary" class="status-detail">60 rpm → 0.0300 m/s；M3 / M4 指令 −60 / −60 rpm。选择前节后保存设置。</p>
+            <div class="button-row"><button id="experiment-configure" class="button secondary">保存设置</button><span id="experiment-config-status" class="inline-status" aria-live="polite">尚未保存</span></div>
+            <div class="divider"></div>
+            <div class="experiment-actions"><button id="experiment-baseline" class="button primary" disabled>▶ 双机试运行</button><button id="experiment-stop" class="button danger">■ 停止</button><button id="experiment-clear-fault" class="button secondary" disabled>清除故障</button></div>
+            <p id="experiment-clear-status" class="status-detail" aria-live="polite">清除后保持停机。</p>
+            <p class="status-detail">双机试运行需要全局相机测速。到距离或时间后停止。</p>
+            <p id="experiment-status" class="experiment-status" aria-live="polite">等待服务状态</p>
+            <ul id="experiment-blockers" class="experiment-blockers"></ul>
+            <div class="reference-readings experiment-readings"><div><span>当前完整奖励</span><strong id="experiment-reward">—</strong><small>含速度跟踪与代价项</small></div><div><span>本次位移</span><strong id="experiment-travel">—</strong><small>m · 全局相机</small></div></div>
+            <details id="learning-details" class="compact-details"><summary>强化学习</summary><p class="description">连接两台相机。采集两组独立准备的数据，再训练模型，最后开始学习。</p><div class="experiment-form"><div><label for="experiment-group">数据准备组名称</label><input id="experiment-group" type="text" maxlength="64" value="preparation-1" spellcheck="false"></div></div><div class="experiment-actions"><button id="experiment-collect" class="button secondary" disabled>1 · 采集数据</button><button id="experiment-pretrain" class="button secondary" disabled>2 · 训练模型</button><button id="experiment-train" class="button primary" disabled>3 · 开始学习</button></div><div class="reference-readings experiment-readings"><div><span>监督样本</span><strong id="experiment-samples">0</strong><small id="experiment-groups">尚未采集</small></div><div><span>预测模型</span><strong id="experiment-model">未训练</strong><small>训练完成后冻结</small></div><div><span>策略更新次数</span><strong id="experiment-policy">0</strong><small>仅本次新采集的真实轨迹</small></div><div><span>实验记录</span><strong id="experiment-run">—</strong><small id="experiment-directory">尚未开始</small></div></div><p class="status-detail">每次学习运行结束后停止，更新一次策略。</p></details>
+          </div>
+          
+        </section>
+<section id="motors" aria-labelledby="motor-title">
+          <div class="section-heading second"><div><span class="section-index">04 / MOTOR TEST</span><h2 id="motor-title">单机测试</h2></div><span id="motor-badge" class="badge"><i></i> 未连接</span></div>
+          <div class="motor-layout">
+            <div class="panel motor-panel">
+              
+              <p class="description">不确定前后与方向时，分别测试 M3、M4。到时自动停止。</p>
+              <div class="button-row"><button id="motor-connect" class="button primary">连接 C 板</button><button id="motor-disconnect" class="button secondary">断开 C 板</button><button id="motor-clear-usb" class="button secondary" disabled>清除故障</button></div>
+              <p id="motor-clear-status" class="status-detail" aria-live="polite">清除后保持停机。</p>
+              <p id="motor-status" class="status-detail" aria-live="polite">未连接 C 板</p>
+              <div class="motor-test-panel">
+                <div class="test-form"><div><label for="test-rpm">转速 <span>rpm · 正负换向</span></label><input id="test-rpm" type="number" min="-500" max="500" step="1" value="-60"></div><div><label for="test-duration">时长 <span>秒</span></label><input id="test-duration" type="number" min="0.5" max="5" step="0.5" value="3"></div></div>
+                <div class="button-row test-buttons"><button id="test-m3" class="button primary" disabled>▶ 测试 M3</button><button id="test-m4" class="button primary" disabled>▶ 测试 M4</button><button id="test-stop" class="button danger">■ 停止</button></div>
+                <p id="motor-test-status" class="status-detail" aria-live="polite">默认 −60 rpm、3 秒。运行时勿触碰旋转件。</p>
+              </div>
+              <details class="compact-details"><summary>电机详细反馈</summary><div class="motor-system"><span>串口 <b id="motor-port">—</b></span><span>STOP 确认 <b id="motor-stop">—</b></span><span>CAN <b id="motor-can">—</b></span><span>故障 <b id="motor-fault">—</b></span><span>方向映射 M3 / M4 <b id="motor-directions">—</b></span></div>
+              <div class="motor-grid">
+                <article class="motor-card"><div class="motor-head"><strong>M3 · 0x207</strong><span id="m3-fresh">无反馈</span></div><div class="motor-metrics"><span>相对转速 <b id="m3-speed">—</b> rpm</span><span>电流原始值 <b id="m3-current">—</b></span><span>目标转速 <b id="m3-target">—</b> rpm</span><span>输出电压指令 <b id="m3-output">—</b></span><span>温度 <b id="m3-temp">—</b> °C</span><span>反馈时龄 <b id="m3-age">—</b> 秒</span></div></article>
+                <article class="motor-card"><div class="motor-head"><strong>M4 · 0x208</strong><span id="m4-fresh">无反馈</span></div><div class="motor-metrics"><span>相对转速 <b id="m4-speed">—</b> rpm</span><span>电流原始值 <b id="m4-current">—</b></span><span>目标转速 <b id="m4-target">—</b> rpm</span><span>输出电压指令 <b id="m4-output">—</b></span><span>温度 <b id="m4-temp">—</b> °C</span><span>反馈时龄 <b id="m4-age">—</b> 秒</span></div></article>
+              </div><p class="status-detail">转速为电机相对转速；电流为原始值。</p></details>
+            </div>
+            
+          </div>
+        </section>
+<section id="optional-tools"><div class="section-heading second"><h2>相机与其他工具</h2></div><details class="panel tools-details"><summary>全局相机 · 测速</summary><div class="details-body"><section id="global-camera" aria-labelledby="global-title">
+          <div class="section-heading second"><div><span class="section-index">02 / GLOBAL CAMERA</span><h2 id="global-title">全局相机测速</h2></div><span id="global-badge" class="badge"><i></i> 未连接</span></div>
+          <div class="global-layout"><div class="panel global-panel">
+            <div class="global-frame-wrap" id="global-frame-wrap"><img id="global-frame" alt="全局相机画面，标定时点击，选取目标时拖框" draggable="false" hidden><svg id="global-overlay" aria-hidden="true"></svg><div id="global-empty">连接电脑上的全局相机后显示画面</div></div>
+            <p id="global-status" class="status-detail" aria-live="polite">尚未连接全局相机</p>
+            <div class="global-readings"><span>轨道位置 <b id="global-position">—</b> m</span><span>实测速度 <b id="global-speed">—</b> m/s</span><span>测速状态 <b id="global-valid">不可用</b></span></div>
+          </div><div class="panel global-panel"><span class="panel-kicker">CAMERA & CALIBRATION</span><h3>连接与标定</h3>
+            <p class="description">用于测速。相机移动后需重新标定。</p>
+            <div class="global-form"><div><label for="global-index">相机编号</label><input id="global-index" type="number" min="0" max="20" step="1" value="0"></div><div><label for="global-direction">头部前沿</label><select id="global-direction"><option value="left">画面左侧</option><option value="right">画面右侧</option></select></div></div>
+            <div class="button-row"><button id="global-connect" class="button primary">连接全局相机</button><button id="global-disconnect" class="button secondary">断开</button></div>
+            <div class="divider"></div><p class="description">输入距离，点击对应位置；至少标两个点，再应用标定。</p>
+            <label for="global-point-position">下一标定点的轨道位置 <span>米</span></label><div class="global-point-row"><input id="global-point-position" type="number" step="0.01" placeholder="例如 0"><button id="global-mark" class="button secondary">在画面点选</button></div>
+            <p id="global-points" class="status-detail">标定点：尚未选择</p><div class="button-row"><button id="global-save-calibration" class="button secondary">应用标定点</button><button id="global-reset-points" class="button secondary">重选标定点</button><button id="global-load-calibration" class="button secondary">载入原标定</button></div>
+            <p class="description">应用标定后，拖框选中机器人头部。</p><div class="button-row"><button id="global-select-roi" class="button secondary">在画面拖框</button><button id="global-clear-roi" class="button secondary">清除跟踪框</button></div>
+            <p id="global-action-status" class="status-detail" aria-live="polite">选择标定点或跟踪框。</p>
+          </div></div>
+        </section></div></details><details class="panel tools-details"><summary>头部相机 · 强化学习</summary><div class="details-body"><section id="camera" aria-labelledby="camera-title">
+          <div class="section-heading"><div><span class="section-index">01 / LIVE VIEW</span><h2 id="camera-title">头部相机</h2></div><span id="camera-badge" class="badge"><i></i> 未连接</span></div>
+          <div class="camera-layout">
+            <div class="video-card">
+              <div class="video-top"><span><i></i> SPA-CAM <em>·</em> LIVE FEED</span><span id="video-sequence">等待画面</span></div>
+              <div class="video-stage"><img id="camera-frame" alt="SPA-CAM 头部实时画面" hidden><div id="video-empty" class="video-empty"><div class="lens"><span></span></div><strong>相机画面将在这里显示</strong><p>选择蓝牙串口并连接 SPA-CAM</p></div><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span></div>
+              <div class="video-footer"><span><i></i> 头部视角</span><span>蓝牙 SPP / USB 串口</span></div>
+            </div>
+            <div class="camera-controls panel">
+              <div class="panel-heading"><div><span class="panel-kicker">CONNECTION</span><h3>连接设置</h3></div><span class="control-icon">⌁</span></div>
+              <p class="description">选择 COM14 · SPA-CAM，点击连接。</p>
+              <label for="port-select">相机串口 <span>COM PORT</span></label>
+              <div class="port-row"><select id="port-select"><option value="">选择串口</option></select><button id="refresh-ports" class="icon-button" aria-label="刷新串口" title="刷新串口">↻</button></div>
+              <div class="button-row"><button id="connect" class="button primary">连接相机 <span>↗</span></button><button id="disconnect" class="button secondary">断开</button></div>
+              <div class="light-row"><div><strong>相机补光</strong><small>控制摄像头板载灯</small></div><label class="switch"><input id="light" type="checkbox" aria-label="相机补光"><span></span></label></div>
+              <div class="divider"></div>
+              <div class="camera-stats"><div><small>已接收</small><strong id="frames">— <em>帧</em></strong></div><div><small>最近帧龄</small><strong id="age">— <em>秒</em></strong></div><div><small>连接状态</small><strong id="link-state">未连接</strong></div></div>
+              <p id="camera-status" class="status-detail" aria-live="polite">等待选择串口</p>
+            </div>
+          </div>
+          <div class="note"><span>ⓘ</span><p><strong>关于画面</strong> · 用于强化学习，不用于测速。</p></div>
+        </section></div></details><details class="panel tools-details"><summary>速度换算 · 仅计算</summary><div class="details-body"><section id="motion-plan" aria-labelledby="motion-title">
+          <div class="section-heading second"><div><span class="section-index">03 / REFERENCE & MEASUREMENT</span><h2 id="motion-title">目标速度、距离与实测</h2></div><span class="badge simulation"><i></i> 计算与观测</span></div>
+          <div class="panel global-panel"><p class="description">30 mm/转 · 1:1；100 rpm = 0.05 m/s。此处只计算，不启动电机。</p>
+            <div class="reference-form"><div><label for="reference-rpm">配对标称转速 q <span>rpm</span></label><input id="reference-rpm" type="number" min="-500" max="500" step="1" value="60"></div><div><label for="reference-lead">螺旋导程 <span>mm / 转 · 已确认</span></label><input id="reference-lead" type="number" min="0.001" step="any" value="30" readonly></div><div><label for="reference-ratio">传动比 <span>转子转数 / 螺旋转数 · 已确认</span></label><input id="reference-ratio" type="number" min="0.001" step="any" value="1" readonly></div><div><label for="reference-distance">目标距离 <span>m</span></label><input id="reference-distance" type="number" min="0.001" step="any" value="0.3"></div><div><label for="reference-sign">正 q 对应的轨道方向</label><select id="reference-sign"><option value="1">轨道正方向 (+)</option><option value="-1">轨道负方向 (−)</option></select></div></div>
+            <div class="button-row"><button id="reference-preview" class="button primary">计算目标速度</button><button id="reference-origin" class="button secondary">以当前相机位置为起点</button></div>
+            <p id="reference-status" class="status-detail" aria-live="polite">导程 30 mm/转、传动比 1:1 已确认；点击计算理论速度。</p>
+            <div class="reference-readings"><div><span>理论目标速度</span><strong id="reference-theory">—</strong><small>m/s · 无滑移</small></div><div><span>全局相机实测速度</span><strong id="reference-actual">—</strong><small>m/s · 有符号对地速度</small></div><div><span>速度误差</span><strong id="reference-error">—</strong><small>m/s · 实测 − 目标</small></div><div><span>速度跟踪奖励项</span><strong id="reference-reward">—</strong><small>不是完整奖励</small></div><div><span>已行驶位移</span><strong id="reference-travel">—</strong><small>m · 相对起点</small></div><div><span>目标距离</span><strong id="reference-goal">—</strong><small>m · 不自动停车</small></div></div>
+            <p class="status-detail">理论值未计滑移和中轴转动；测量受标定、跟踪和滤波延迟影响。相机无效或数据过期时实测、误差和奖励均不可用。</p>
+          </div>
+        </section></div></details><details class="panel tools-details"><summary>被动记录</summary><div class="details-body"><div class="panel motor-panel"><span class="panel-kicker">PASSIVE RECORDING</span><h3>被动记录</h3><p class="description">只保存数据，不驱动电机。</p>
+              <label for="record-duration">记录时长 <span>SECONDS · 2–30</span></label><input id="record-duration" type="number" min="2" max="30" step="1" value="10">
+              <div class="button-row"><button id="record-start" class="button primary">开始记录 <span>↗</span></button><button id="record-stop" class="button secondary">停止记录</button></div>
+              <p id="record-status" class="status-detail" aria-live="polite">尚未记录</p><div class="record-stats"><span>样本 <b id="record-samples">0</b></span><span>图像 <b id="record-images">0</b></span></div><p class="status-detail">保存位置：<span id="record-directory">—</span></p><p class="status-detail">强化学习数据由实验单独保存。</p>
+            </div></div></details><details class="panel offline-details"><summary>离线合成检查（不驱动电机）</summary><div class="algorithm-copy"><p class="algorithm-warning">使用合成特征和数据检查双路计算；不代表真实实验效果，也不能替代上面的实机预训练。</p><div class="model-check"><button id="model-check" class="button secondary">运行双路合成检查 <span>↗</span></button><span id="model-check-status" aria-live="polite">使用上面选择的前节顺序</span></div><div id="model-result" class="model-result" hidden><strong id="model-notice"></strong><div class="model-values"><span>检查顺序 <b id="model-order">—</b></span><span>后节残差 <b id="model-action">—</b></span><span>空历史权重 <b id="model-null">—</b></span><span>可用历史窗 <b id="model-history">—</b></span></div></div></div></details></section>
+<section id="simulation" aria-labelledby="simulation-title" hidden>
+          <div class="section-heading second"><div><span class="section-index">03 / OFFLINE SANDBOX</span><h2 id="simulation-title">残差策略离线模拟</h2></div><span class="badge simulation"><i></i> 模拟环境</span></div>
+          <div class="simulation-layout">
+            <div class="panel sim-main"><div class="sim-top"><div><span class="panel-kicker">POLICY SANDBOX</span><h3>观察策略输出</h3><p>运行离线步骤，查看算法示例的数值变化。</p></div><span class="sim-icon">⌁</span></div>
+              <div class="metric-grid"><div><span>模拟步数</span><strong id="sim-step">—</strong></div><div><span>模拟奖励</span><strong id="sim-reward">—</strong></div><div><span>残差动作</span><strong id="sim-action">—</strong></div></div>
+              <div class="training-stats"><span>策略版本 <b id="policy-version">—</b></span><span>训练批数 <b id="train-batches">—</b></span><span>最近损失 <b id="last-loss">—</b></span></div>
+              <div class="chart-heading"><div><strong>数值趋势</strong><small>离线模拟历史</small></div><span id="chart-label">等待模拟</span></div><div class="chart-wrap"><canvas id="trend" aria-label="离线模拟数值趋势"></canvas><div id="chart-empty">运行模拟后显示趋势</div></div>
+            </div>
+            <div class="panel sim-side"><span class="panel-kicker">CONTROLS</span><h3>模拟控制</h3><p class="description">此区域不连接电机；结果仅反映模拟条件。</p><label for="seed">随机种子 <span>SEED</span></label><input id="seed" type="number" value="0" min="0" max="2147483647" step="1"><div class="simulation-buttons"><button id="sim-reset" class="button secondary">重置模拟</button><button id="sim-step-btn" class="button primary">运行一步 <span>→</span></button></div><button id="sim-train" class="button train-button">合成训练一批 <span>↗</span></button><div class="sim-note"><strong>合成数据 · 非真实实验</strong><p>残差限制 ±5。策略和预测器未经真实数据训练，不能代表实机效果。</p></div><p id="sim-status" class="status-detail" aria-live="polite">准备就绪</p></div>
+          </div>
+        </section>
+<footer><span>SPA WORKBENCH <em> / </em> LOCAL</span><span>本地运行</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

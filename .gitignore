@@ -1,0 +1,39 @@
+# Python and local environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# Local experiment data, photos, calibration, trained models and logs
+runs/
+*.log
+*.pt
+*.pth
+*.npz
+*.onnx
+global_camera_calibration.json
+
+# Firmware build products and dependency caches
+build/
+.pio/
+.ninja_deps
+.ninja_log
+*.o
+*.elf
+*.hex
+*.bin
+*.map
+
+# Local configuration and editor state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
